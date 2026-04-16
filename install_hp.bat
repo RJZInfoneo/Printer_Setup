@@ -17,7 +17,7 @@ set "ZIP_FILE=%FOLDER_ROOT%\drivers.zip"
 set "Pilote=%FOLDER_ROOT%\HPOneDriver.4081_V3_x64.inf"
 set "NomLocal=REFFYE COULEUR"
 
-:: CORRECTION 1 : Ajout du (V3) obligatoire
+:: CORRECTION 1 : Ajout du (V3) obligatoire ici !
 set "Imprimante=HP Smart Universal Printing (V3)"
 
 echo [+] Dossiers...
@@ -45,7 +45,7 @@ if exist "%Pilote%" (
     exit /b
 )
 
-:: CORRECTION 2 : Injection officielle du pilote dans le spooler Windows
+:: CORRECTION 2 : L'injection obligatoire dans le spooler est ici !
 echo [+] Pilote (Injection Spooler)...
 powershell -Command "Add-PrinterDriver -Name '%Imprimante%' -InfPath '%Pilote%' -ErrorAction SilentlyContinue" >nul 2>&1
 
