@@ -2,22 +2,18 @@
 :: Force la console en UTF-8 pour eviter les plantages d'ESET
 chcp 65001 >nul
 SETLOCAL
-
 :: Verification du parametre IP
 set "IP=%~1"
 if "%IP%"=="" (
     echo [!] ERREUR : IP manquante.
     exit /b
 )
-
 :: --- Configuration ---
 set "URL_ZIP=https://github.com/RJZInfoneo/Printer_Setup/raw/main/Hpnew.zip"
 set "FOLDER_ROOT=C:\Admin\Imprimantes\Drivers\HP\new_drivers"
 set "ZIP_FILE=%FOLDER_ROOT%\drivers.zip"
 set "Pilote=%FOLDER_ROOT%\HPOneDriver.4081_V3_x64.inf"
 set "NomLocal=REFFYE COULEUR"
-
-:: CORRECTION 1 : Ajout du (V3) obligatoire ici !
 set "Imprimante=HP Smart Universal Printing (V3)"
 
 echo [+] Dossiers...
@@ -45,9 +41,9 @@ if exist "%Pilote%" (
     exit /b
 )
 
-:: CORRECTION 2 : L'injection obligatoire dans le spooler est ici !
 echo [+] Pilote (Injection Spooler)...
-powershell -Command "Add-PrinterDriver -Name '%Imprimante%' -InfPath '%Pilote%' -ErrorAction SilentlyContinue" >nul 2>&1
+for /f "delims=" %%D in ('powershell -Command "(Get-ChildItem \"C:\Windows\System32\DriverStore\FileRepository\" -Filter \"hponedriver.4081_v3*\" | Where-Object { $_.PSIsContainer } | Select-Object -First 1).FullName"') do set "DRIVER_STORE=%%D"
+powershell -Command "Add-PrinterDriver -Name '%Imprimante%' -InfPath '%DRIVER_STORE%\HPOneDriver.4081_V3_x64.inf' -ErrorAction SilentlyContinue" >nul 2>&1
 
 echo [+] Imprimante...
 powershell -Command "if (-not (Get-Printer -Name '%NomLocal%' -ErrorAction SilentlyContinue)) { Add-Printer -Name '%NomLocal%' -DriverName '%Imprimante%' -PortName \"IP_%IP%\" }" >nul 2>&1
