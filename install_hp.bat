@@ -44,8 +44,12 @@ if exist "%Pilote%" (
 echo [+] Imprimante...
 powershell -Command "if (-not (Get-Printer -Name '%NomLocal%' -ErrorAction SilentlyContinue)) { Add-Printer -Name '%NomLocal%' -DriverName '%Imprimante%' -PortName \"IP_%IP%\" }"
 
+:: Petite pause d'une seconde pour que le service d'impression digere l'ajout
+timeout /t 1 /nobreak >nul
+
 echo [+] Mise par defaut...
-rundll32 printui.dll,PrintUIEntry /y /n "%NomLocal%"
+:: Le parametre /q est CRUCIAL ici pour ne pas bloquer l'agent ESET (mode silencieux)
+rundll32 printui.dll,PrintUIEntry /y /n "%NomLocal%" /q
 
 echo [OK] Termine.
 exit /b
