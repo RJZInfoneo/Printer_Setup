@@ -1,14 +1,10 @@
 @echo off
 SETLOCAL
 
-:: 1. Configuration du log
-set "LOG_FILE=C:\Admin\log_installation.txt"
-echo --- Debut %date% %time% --- > "%LOG_FILE%"
-
-:: 2. Verification du parametre IP
+:: Verification du parametre IP
 set "IP=%~1"
 if "%IP%"=="" (
-    echo [!] ERREUR : IP manquante. >> "%LOG_FILE%"
+    echo [!] ERREUR : IP manquante.
     exit /b
 )
 
@@ -21,39 +17,35 @@ set "NomLocal=REFFYE COULEUR"
 set "Imprimante=HP Smart Universal Printing"
 
 echo [+] Dossiers...
-if not exist "%FOLDER_ROOT%" mkdir "%FOLDER_ROOT%" >> "%LOG_FILE%" 2>&1
+if not exist "%FOLDER_ROOT%" mkdir "%FOLDER_ROOT%"
 
 echo [+] Verification...
 if exist "%Pilote%" goto :SKIP_DOWNLOAD
 
 echo [+] Telechargement...
-powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri '%URL_ZIP%' -OutFile '%ZIP_FILE%' -UseBasicParsing" >> "%LOG_FILE%" 2>&1
+powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri '%URL_ZIP%' -OutFile '%ZIP_FILE%' -UseBasicParsing"
 
 echo [+] Extraction...
-powershell -Command "Expand-Archive -Path '%ZIP_FILE%' -DestinationPath '%FOLDER_ROOT%' -Force" >> "%LOG_FILE%" 2>&1
-if exist "%ZIP_FILE%" del /q "%ZIP_FILE%" >> "%LOG_FILE%" 2>&1
+powershell -Command "Expand-Archive -Path '%ZIP_FILE%' -DestinationPath '%FOLDER_ROOT%' -Force"
+if exist "%ZIP_FILE%" del /q "%ZIP_FILE%"
 
 :SKIP_DOWNLOAD
 echo [+] Port...
-:: Correction ici : utilisation de -not
-powershell -Command "if (-not (Get-PrinterPort -Name \"IP_%IP%\" -ErrorAction SilentlyContinue)) { Add-PrinterPort -Name \"IP_%IP%\" -PrinterHostAddress \"%IP%\" }" >> "%LOG_FILE%" 2>&1
+powershell -Command "if (-not (Get-PrinterPort -Name \"IP_%IP%\" -ErrorAction SilentlyContinue)) { Add-PrinterPort -Name \"IP_%IP%\" -PrinterHostAddress \"%IP%\" }"
 
 echo [+] Pilote...
 if exist "%Pilote%" (
-    pnputil /add-driver "%Pilote%" /install >> "%LOG_FILE%" 2>&1
+    pnputil /add-driver "%Pilote%" /install
 ) else (
-    echo [!] ERREUR : Pilote introuvable. >> "%LOG_FILE%"
+    echo [!] ERREUR : Pilote introuvable.
     exit /b
 )
 
 echo [+] Imprimante...
-:: Methode "printui" : 100% fiable depuis ESET / SYSTEM
-rundll32 printui.dll,PrintUIEntry /if /f "%Pilote%" /b "%NomLocal%" /r "IP_%IP%" /m "%Imprimante%" /q >> "%LOG_FILE%" 2>&1
+powershell -Command "if (-not (Get-Printer -Name '%NomLocal%' -ErrorAction SilentlyContinue)) { Add-Printer -Name '%NomLocal%' -DriverName '%Imprimante%' -PortName \"IP_%IP%\" }"
 
-:: Mise par defaut sans PowerShell
-rundll32 printui.dll,PrintUIEntry /y /n "%NomLocal%" >> "%LOG_FILE%" 2>&1
+echo [+] Mise par defaut...
+rundll32 printui.dll,PrintUIEntry /y /n "%NomLocal%"
 
 echo [OK] Termine.
-echo --- Fin SUCCES --- >> "%LOG_FILE%"
-
 exit /b
