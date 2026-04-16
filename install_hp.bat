@@ -6,7 +6,8 @@ set "LOG_FILE=C:\Admin\log_installation.txt"
 echo --- Debut %date% %time% --- > "%LOG_FILE%"
 
 :: 2. Verification du parametre IP
-if "%~1"=="" (
+set "IP=%~1"
+if "%IP%"=="" (
     echo [!] ERREUR : IP manquante. >> "%LOG_FILE%"
     exit /b
 )
@@ -34,7 +35,7 @@ if exist "%ZIP_FILE%" del /q "%ZIP_FILE%" >> "%LOG_FILE%" 2>&1
 
 :SKIP_DOWNLOAD
 echo [+] Port...
-powershell -Command "$p='%~1'; if (!(Get-PrinterPort -Name \"IP_$p\" -ErrorAction SilentlyContinue)) { Add-PrinterPort -Name \"IP_$p\" -PrinterHostAddress $p }" >> "%LOG_FILE%" 2>&1
+powershell -Command "if (!(Get-PrinterPort -Name \"IP_%IP%\" -ErrorAction SilentlyContinue)) { Add-PrinterPort -Name \"IP_%IP%\" -PrinterHostAddress \"%IP%\" }" >> "%LOG_FILE%" 2>&1
 
 echo [+] Pilote...
 if exist "%Pilote%" (
@@ -45,8 +46,11 @@ if exist "%Pilote%" (
 )
 
 echo [+] Imprimante...
-powershell -Command "$p='%~1'; if (!(Get-Printer -Name '%NomLocal%' -ErrorAction SilentlyContinue)) { Add-Printer -Name '%NomLocal%' -DriverName '%Imprimante%' -PortName \"IP_$p\" }" >> "%LOG_FILE%" 2>&1
-powershell -Command "Set-Printer -Name '%NomLocal%' -IsDefault $true" >> "%LOG_FILE%" 2>&1
+:: Methode "printui" : 100% fiable depuis ESET / SYSTEM
+rundll32 printui.dll,PrintUIEntry /if /f "%Pilote%" /b "%NomLocal%" /r "IP_%IP%" /m "%Imprimante%" /q >> "%LOG_FILE%" 2>&1
+
+:: Mise par defaut sans PowerShell
+rundll32 printui.dll,PrintUIEntry /y /n "%NomLocal%" >> "%LOG_FILE%" 2>&1
 
 echo [OK] Termine.
 echo --- Fin SUCCES --- >> "%LOG_FILE%"
