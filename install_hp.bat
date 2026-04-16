@@ -11,12 +11,12 @@ if "%AdresseIP%"=="" (
 )
 
 :: --- Configuration ---
-:: Utilisation du lien RAW de GitHub pour le ZIP
 set "URL_ZIP=https://github.com/RJZInfoneo/Printer_Setup/raw/main/Hpnew.zip"
 set "FOLDER_ROOT=C:\Admin\Imprimantes\Drivers\HP\new_drivers"
 set "ZIP_FILE=%FOLDER_ROOT%\drivers.zip"
-:: Vérifie bien que le chemin interne après extraction est correct
-set "Pilote=%FOLDER_ROOT%\Driver HP new\HPOneDriver.4081_V3_x64.inf"
+
+:: CORRECTION DU CHEMIN (Le dossier "Driver HP new" n'existe pas après extraction)
+set "Pilote=%FOLDER_ROOT%\HPOneDriver.4081_V3_x64.inf"
 
 set "NomLocal=REFFYE COULEUR"
 set "Imprimante=HP Smart Universal Printing"
@@ -39,18 +39,22 @@ if exist "%ZIP_FILE%" (
     exit /b
 )
 
-:: 4. Installation du Port
+:: 4. Installation du Port (Silencieux)
 echo Configuration du port IP_%AdresseIP%...
 cscript //Nologo %windir%\System32\Printing_Admin_Scripts\fr-FR\prnport.vbs -a -r IP_%AdresseIP% -h %AdresseIP% -o raw -n 9100 >nul 2>&1
 
-:: 5. Installation de l'Imprimante
-echo Installation du pilote d'impression...
+:: 5. Enregistrement du pilote dans le système (Nécessaire pour Windows 10/11)
+echo Injection du pilote dans le magasin Windows...
+pnputil /add-driver "%Pilote%" /install >nul 2>&1
+
+:: 6. Installation de l'Imprimante
+echo Installation de l'imprimante %NomLocal%...
 if exist "%Pilote%" (
     rundll32 printui.dll,PrintUIEntry /if /f "%Pilote%" /b "%NomLocal%" /r IP_%AdresseIP% /m "%Imprimante%" /q
     rundll32 printui.dll,PrintUIEntry /y /n "%NomLocal%"
     echo Installation terminee avec succes.
 ) else (
-    echo Erreur : Fichier .inf introuvable dans %Pilote%
+    echo Erreur : Fichier .inf introuvable : %Pilote%
 )
 
 exit
