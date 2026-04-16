@@ -1,5 +1,5 @@
 @echo off
-SETLOCAL EnableDelayedExpansion
+SETLOCAL
 
 :: 1. Configuration du log
 set "LOG_FILE=C:\Admin\log_installation.txt"
@@ -35,7 +35,8 @@ if exist "%ZIP_FILE%" del /q "%ZIP_FILE%" >> "%LOG_FILE%" 2>&1
 
 :SKIP_DOWNLOAD
 echo [+] Port...
-powershell -Command "if (!(Get-PrinterPort -Name \"IP_%IP%\" -ErrorAction SilentlyContinue)) { Add-PrinterPort -Name \"IP_%IP%\" -PrinterHostAddress \"%IP%\" }" >> "%LOG_FILE%" 2>&1
+:: Correction ici : utilisation de -not
+powershell -Command "if (-not (Get-PrinterPort -Name \"IP_%IP%\" -ErrorAction SilentlyContinue)) { Add-PrinterPort -Name \"IP_%IP%\" -PrinterHostAddress \"%IP%\" }" >> "%LOG_FILE%" 2>&1
 
 echo [+] Pilote...
 if exist "%Pilote%" (
